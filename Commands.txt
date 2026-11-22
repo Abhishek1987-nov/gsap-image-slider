@@ -4,4 +4,4 @@ git push -u origin main
 git checkout -b feature-slider
 git add .
 git commit -m "Update slider"
-git push -u origin feature-slide
+git push -u origin feature-slider
