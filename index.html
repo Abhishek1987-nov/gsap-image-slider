@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GSAP Image Slider</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: #1c2321;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      color: #f2efe8;
+    }
+    .slider {
+      position: relative;
+      width: min(900px, 92vw);
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      border-radius: 10px;
+      background: #000;
+    }
+    .slide {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      visibility: hidden;
+    }
+    .slide:first-child { opacity: 1; visibility: visible; }
+    .slide img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .caption {
+      position: absolute;
+      left: 24px;
+      bottom: 56px;
+      font-size: clamp(1.1rem, 3vw, 1.8rem);
+      font-weight: 600;
+      text-shadow: 0 2px 12px rgba(0, 0, 0, .6);
+    }
+    .btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 44px;
+      height: 44px;
+      border: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .85);
+      color: #1c2321;
+      font-size: 20px;
+      cursor: pointer;
+      z-index: 2;
+    }
+    .btn:hover { background: #fff; }
+    .btn:focus-visible, .dot:focus-visible { outline: 3px solid #7fd1b9; outline-offset: 2px; }
+    .prev { left: 14px; }
+    .next { right: 14px; }
+    .dots {
+      position: absolute;
+      bottom: 16px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      z-index: 2;
+    }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .5);
+      cursor: pointer;
+    }
+    .dot.active { background: #fff; }
+  </style>
+</head>
+<body>
+
+  <div class="slider" id="slider">
+    <div class="slide">
+      <img src="https://picsum.photos/id/1018/1200/675" alt="Mountain lake">
+      <p class="caption">Mountain lake</p>
+    </div>
+    <div class="slide">
+      <img src="https://picsum.photos/id/1015/1200/675" alt="River valley">
+      <p class="caption">River valley</p>
+    </div>
+    <div class="slide">
+      <img src="https://picsum.photos/id/1039/1200/675" alt="Waterfall">
+      <p class="caption">Waterfall</p>
+    </div>
+    <div class="slide">
+      <img src="https://picsum.photos/id/1043/1200/675" alt="Forest path">
+      <p class="caption">Forest path</p>
+    </div>
+
+    <button class="btn prev" aria-label="Previous slide">&#10094;</button>
+    <button class="btn next" aria-label="Next slide">&#10095;</button>
+    <div class="dots" id="dots"></div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script>
+    const slides = gsap.utils.toArray(".slide");
+    const dotsWrap = document.getElementById("dots");
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let current = 0;
+    let animating = false;
+    let timer;
+
+    // Build dots
+    slides.forEach((_, i) => {
+      const dot = document.createElement("button");
+      dot.className = "dot" + (i === 0 ? " active" : "");
+      dot.setAttribute("aria-label", "Go to slide " + (i + 1));
+      dot.addEventListener("click", () => goTo(i));
+      dotsWrap.appendChild(dot);
+    });
+    const dots = Array.from(dotsWrap.children);
+
+    function goTo(next, direction) {
+      if (animating || next === current) return;
+      animating = true;
+
+      // direction: 1 = forward, -1 = backward
+      const dir = direction || (next > current ? 1 : -1);
+      const from = slides[current];
+      const to = slides[next];
+      const dur = reduceMotion ? 0 : 0.8;
+
+      gsap.set(to, { visibility: "visible", opacity: 1, xPercent: 100 * dir });
+
+      gsap.timeline({
+        defaults: { duration: dur, ease: "power2.inOut" },
+        onComplete: () => {
+          gsap.set(from, { visibility: "hidden", opacity: 0 });
+          animating = false;
+        }
+      })
+      .to(from, { xPercent: -100 * dir }, 0)
+      .to(to, { xPercent: 0 }, 0)
+      .fromTo(to.querySelector(".caption"),
+        { y: 20, opacity: 0 },
+        { y: 0, opacity: 1, duration: dur ? 0.6 : 0 }, dur ? 0.4 : 0);
+
+      dots[current].classList.remove("active");
+      dots[next].classList.add("active");
+      current = next;
+      restartAutoplay();
+    }
+
+    const next = () => goTo((current + 1) % slides.length, 1);
+    const prev = () => goTo((current - 1 + slides.length) % slides.length, -1);
+
+    document.querySelector(".next").addEventListener("click", next);
+    document.querySelector(".prev").addEventListener("click", prev);
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowRight") next();
+      if (e.key === "ArrowLeft") prev();
+    });
+
+    function restartAutoplay() {
+      clearInterval(timer);
+      if (!reduceMotion) timer = setInterval(next, 4000);
+    }
+    restartAutoplay();
+  </script>
+</body>
+</html>
