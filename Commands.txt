@@ -1,7 +1,25 @@
+
+
+Creating a Repositories
+Step 1
+Adding Files
+
+git init
 git add .                                                                      
 git commit -m "Add GSAP image slider"                                          
-git push -u origin main              
+git push -u origin main
+
+Step 2
+Creating a Branch of feature slider
+
 git checkout -b feature-slider
 git add .
 git commit -m "Update slider"
 git push -u origin feature-slider
+
+Step 3
+Merging without a pull request
+
+git checkout main
+git merge feature-slider or git branch -D feature-slider
+git push
