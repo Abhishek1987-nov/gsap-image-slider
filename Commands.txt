@@ -5,3 +5,9 @@ git checkout -b feature-slider
 git add .
 git commit -m "Update slider"
 git push -u origin feature-slider
+
+
+Merging without a pull request
+git checkout main
+git merge feature-slider
+git push
